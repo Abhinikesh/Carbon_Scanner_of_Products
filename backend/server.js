@@ -53,9 +53,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Quick smoke-test route
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Backend working' });
+});
+
+app.get('/', (req, res) => {
+  res.status(200).send('Climate Lens server is running');
 });
 
 // 404 Handler
