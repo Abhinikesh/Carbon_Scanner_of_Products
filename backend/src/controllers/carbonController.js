@@ -1,11 +1,6 @@
 const { EMISSION_FACTORS } = require('../utils/carbonCalculator');
 const { sendSuccess } = require('../utils/responseHelper');
 
-/**
- * @desc   Get all local emission factors
- * @route  GET /api/carbon/factors
- * @access Public
- */
 const getFactors = async (req, res, next) => {
   try {
     return sendSuccess(res, 200, 'Emission factors fetched', { factors: EMISSION_FACTORS });
@@ -14,11 +9,6 @@ const getFactors = async (req, res, next) => {
   }
 };
 
-/**
- * @desc   Compare CO2 of two items
- * @route  GET /api/carbon/compare?item1=beef&item2=chicken&category=food
- * @access Public
- */
 const compareItems = async (req, res, next) => {
   try {
     const { item1, item2, category = 'food' } = req.query;
