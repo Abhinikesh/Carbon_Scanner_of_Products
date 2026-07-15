@@ -6,7 +6,7 @@ export default function Hero() {
   const [co2, setCo2] = useState(0);
 
   useEffect(() => {
-    // Check for prefers-reduced-motion
+    
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mediaQuery.matches) {
       setCo2(2.4);
