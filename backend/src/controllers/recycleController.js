@@ -3,15 +3,8 @@ const disposalCategories = require('../data/disposalCategories.json');
 const { matchDisposalCategory } = require('../utils/matchDisposalCategory');
 const { getDistanceKm } = require('../utils/haversine');
 
-// In-memory cache for Overpass API responses (1 hour TTL)
 const overpassCache = new Map();
 
-/**
- * Looks up disposal instructions for a search query or a specific scan ID.
- *
- * @route POST /api/recycle/lookup
- * @access Private
- */
 async function lookupDisposal(req, res, next) {
   try {
     const { query, scanId } = req.body;
