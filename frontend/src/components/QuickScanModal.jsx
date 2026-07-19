@@ -137,7 +137,7 @@ export default function QuickScanModal({ isOpen, onClose }) {
   const selectType = (typeId) => {
     setSelectedType(typeId);
     setStep('select-file');
-    // Gemini Vision identifies the product server-side — no client warmup needed.
+    
   };
 
   const handleBack = () => {
