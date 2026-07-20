@@ -48,13 +48,6 @@ async function lookupDisposal(req, res, next) {
     next(error);
   }
 }
-
-/**
- * Geocodes an address string using the OpenStreetMap Nominatim API proxy.
- *
- * @route GET /api/recycle/geocode
- * @access Private
- */
 async function geocodeAddress(req, res, next) {
   try {
     const { q } = req.query;
