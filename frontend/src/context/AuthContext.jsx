@@ -11,7 +11,6 @@ export function AuthProvider({ children }) {
   // Derived state
   const isAuthenticated = !!user;
 
-  // On mount: attempt silent token refresh and session restore
   useEffect(() => {
     const restoreSession = async () => {
       try {
