@@ -16,7 +16,7 @@ export default function Hero() {
     // Animation to count up to 2.4 kg CO2e
     let start = 0;
     const end = 2.4;
-    const duration = 1000; // 1 second
+    const duration = 1000;
     const stepTime = 30; // 30ms intervals
     const steps = duration / stepTime;
     const increment = end / steps;
