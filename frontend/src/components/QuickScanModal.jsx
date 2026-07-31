@@ -30,7 +30,6 @@ export default function QuickScanModal({ isOpen, onClose }) {
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Manage modal open/close actions and focus restoration
   useEffect(() => {
     if (isOpen) {
       // Store current focus
