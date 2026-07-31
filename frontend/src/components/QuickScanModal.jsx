@@ -23,7 +23,6 @@ export default function QuickScanModal({ isOpen, onClose }) {
   const [errorMessage, setErrorMessage] = useState(null);
   const [unlockedBadges, setUnlockedBadges] = useState([]);
 
-  // Focus management refs
   const previousFocusRef = useRef(null);
   const modalPanelRef = useRef(null);
 
