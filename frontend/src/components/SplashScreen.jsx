@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 /**
- * SplashScreen — shown for ~1.4 s on first load while AuthContext resolves
+ * SplashScreen — shown for ~1.4 s on first load while A
  * the session. Fades out gracefully before handing off to the real UI.
  *
  * Design:
