@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
 /**
- * the session. Fades out gracefully before handing off to the real UI.
  *
  * Design:
  *   • Deep forest (#1a3d2b) full-screen background
