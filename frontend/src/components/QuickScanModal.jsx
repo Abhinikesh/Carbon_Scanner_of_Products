@@ -26,7 +26,6 @@ export default function QuickScanModal({ isOpen, onClose }) {
   const previousFocusRef = useRef(null);
   const modalPanelRef = useRef(null);
 
-  // Hidden inputs refs
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
