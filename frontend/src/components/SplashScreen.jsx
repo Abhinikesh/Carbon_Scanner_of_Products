@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from 'react';
 
-/**
- *
- * Design:
- */
 export default function SplashScreen({ done }) {
   const [fading, setFading] = useState(false);
   const [hidden, setHidden] = useState(false);
