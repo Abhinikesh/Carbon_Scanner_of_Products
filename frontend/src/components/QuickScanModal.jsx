@@ -19,7 +19,7 @@ export default function QuickScanModal({ isOpen, onClose }) {
   const [step, setStep] = useState('select-type'); 
   const [selectedType, setSelectedType] = useState(null); 
   const [selectedFile, setSelectedFile] = useState(null);
-  const [result, setResult] = useState(null); // { scan: Object, newBadges: Array }
+  const [result, setResult] = useState(null); 
   const [errorMessage, setErrorMessage] = useState(null);
   const [unlockedBadges, setUnlockedBadges] = useState([]);
 
