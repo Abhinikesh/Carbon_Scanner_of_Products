@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
  *   • Deep forest (#1a3d2b) full-screen background
  *   • climate_lens_logo.png centred with a soft pulse-scale animation
  *   • "Climate Lens" wordmark + tagline beneath the logo
- *   • Three animated leaf dots as a loading indicator
  */
 export default function SplashScreen({ done }) {
   const [fading, setFading] = useState(false);
