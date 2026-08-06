@@ -6,7 +6,6 @@ export default function SplashScreen({ done }) {
 
   useEffect(() => {
     if (done) {
-      // Start fade-out after a short delay so the logo is visible at least briefly
       const fadeTimer = setTimeout(() => setFading(true), 200);
       // Fully unmount after fade completes
       const hideTimer = setTimeout(() => setHidden(true), 800);
