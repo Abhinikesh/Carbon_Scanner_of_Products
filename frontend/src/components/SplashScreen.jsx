@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 /**
  *
  * Design:
- *   • Deep forest (#1a3d2b) full-screen background
  */
 export default function SplashScreen({ done }) {
   const [fading, setFading] = useState(false);
