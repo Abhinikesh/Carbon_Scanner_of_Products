@@ -56,7 +56,6 @@ export default function QuickScanModal({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  // Handle Escape key listener
   useEffect(() => {
     if (!isOpen) return;
 
