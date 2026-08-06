@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react';
  *   • climate_lens_logo.png centred with a soft pulse-scale animation
  *   • "Climate Lens" wordmark + tagline beneath the logo
  *   • Three animated leaf dots as a loading indicator
- *   • Fade-out transition when `done` prop becomes true
  */
 export default function SplashScreen({ done }) {
   const [fading, setFading] = useState(false);
