@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
  *
  * Design:
  *   • Deep forest (#1a3d2b) full-screen background
- *   • climate_lens_logo.png centred with a soft pulse-scale animation
  */
 export default function SplashScreen({ done }) {
   const [fading, setFading] = useState(false);
