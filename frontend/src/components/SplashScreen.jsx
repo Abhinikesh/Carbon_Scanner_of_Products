@@ -7,7 +7,6 @@ export default function SplashScreen({ done }) {
   useEffect(() => {
     if (done) {
       const fadeTimer = setTimeout(() => setFading(true), 200);
-      // Fully unmount after fade completes
       const hideTimer = setTimeout(() => setHidden(true), 800);
       return () => {
         clearTimeout(fadeTimer);
