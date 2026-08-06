@@ -16,7 +16,7 @@ export default function QuickScanModal({ isOpen, onClose }) {
   const { refreshStats } = useScanStats();
   const { refreshUser } = useAuth();
 
-  const [step, setStep] = useState('select-type'); // 'select-type' | 'select-file' | 'processing' | 'result' | 'error'
+  const [step, setStep] = useState('select-type'); 
   const [selectedType, setSelectedType] = useState(null); // 'product' | 'receipt' | 'flight' | 'barcode'
   const [selectedFile, setSelectedFile] = useState(null);
   const [result, setResult] = useState(null); // { scan: Object, newBadges: Array }
