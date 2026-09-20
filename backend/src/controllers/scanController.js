@@ -679,6 +679,77 @@ async function deleteScan(req, res, next) {
   }
 }
 
+/**
+ * Deletes ALL scans for the user (Guest or Authenticated).
+ * Privacy-first one-click wipe.
+ *
+ * @route DELETE /api/scans
+ * @access Private
+ */
+async function clearAllScans(req, res, next) {
+  try {
+    const result = await Scan.deleteMany({ user: req.user.id });
+    return res.status(200).json({
+      success: true,
+      message: 'All scan history deleted successfully',
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Exports all scans for the user in CSV or JSON format.
+ *
+ * @route GET /api/scans/export
+ * @access Private
+ */
+async function exportScans(req, res, next) {
+  try {
+    const format = req.query.format === 'csv' ? 'csv' : 'json';
+    const scans = await Scan.find({ user: req.user.id }).sort({ createdAt: -1 });
+
+    if (format === 'csv') {
+      const headers = ['ID', 'Date', 'Type', 'Filename_or_Value', 'Category', 'CO2_kg', 'Score', 'Status', 'Store_or_Route', 'Top_Carbon_Offender'];
+      const rows = scans.map((s) => {
+        const topOffender = s.calculationDetails?.receiptBreakdown?.topOffender?.name || '';
+        const storeOrRoute = s.type === 'receipt' 
+          ? (s.parsedFields?.storeName || '') 
+          : s.type === 'flight' 
+            ? (s.parsedFields?.airportCodes?.join('->') || '')
+            : '';
+        const name = s.type === 'barcode' ? (s.barcodeValue || '') : (s.originalFilename || '');
+        
+        return [
+          s._id,
+          s.createdAt ? new Date(s.createdAt).toISOString() : '',
+          s.type,
+          `"${name.replace(/"/g, '""')}"`,
+          `"${(s.category || '').replace(/"/g, '""')}"`,
+          s.co2Kg != null ? s.co2Kg : '',
+          s.score != null ? s.score : '',
+          s.status,
+          `"${storeOrRoute.replace(/"/g, '""')}"`,
+          `"${topOffender.replace(/"/g, '""')}"`
+        ].join(',');
+      });
+
+      const csvContent = [headers.join(','), ...rows].join('\n');
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="climate-lens-scans.csv"');
+      return res.status(200).send(csvContent);
+    }
+
+    // Default JSON format
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename="climate-lens-scans.json"');
+    return res.status(200).json(scans);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createScan,
   listScans,
@@ -687,6 +758,8 @@ module.exports = {
   getScanStats,
   getScanChart,
   getScanAlternative,
-  deleteScan
+  deleteScan,
+  clearAllScans,
+  exportScans
 };
 

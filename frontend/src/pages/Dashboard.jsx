@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   BarChart2, Leaf, Zap, Award, CloudUpload,
   CheckCircle2, Clock, TrendingDown, X, Recycle, Loader2,
-  Car, Trees, Smartphone, Lightbulb, Globe, Flame
+  Car, Trees, Smartphone, Lightbulb, Globe, Flame, Receipt
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,6 +17,8 @@ import EmptyState from '../components/common/EmptyState.jsx';
 import ScoreBadge from '../components/common/ScoreBadge.jsx';
 import { BADGE_CATALOG } from '../data/badgeCatalog.js';
 import { AlternativeDetails } from './UploadCenter.jsx';
+import ReceiptBreakdown from '../components/ReceiptBreakdown.jsx';
+import PrivacyDataControls from '../components/PrivacyDataControls.jsx';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {
@@ -54,51 +56,46 @@ export default function Dashboard() {
   const [scans, setScans] = useState([]);
   const [scansLoading, setScansLoading] = useState(true);
 
+  // Multi-item receipt breakdown modal state
+  const [activeReceiptScan, setActiveReceiptScan] = useState(null);
+
   useEffect(() => {
     refreshStats();
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    const fetchChart = async () => {
-      setChartLoading(true);
-      try {
-        const res = await api.get(`/scans/chart?range=${selectedRange}`);
-        if (active && res.data && res.data.success) {
-          setChartData(res.data.data);
-        }
-      } catch (err) {
-        console.error('[Dashboard] Failed to fetch chart data:', err);
-      } finally {
-        if (active) setChartLoading(false);
+  const fetchChart = useCallback(async () => {
+    setChartLoading(true);
+    try {
+      const res = await api.get(`/scans/chart?range=${selectedRange}`);
+      if (res.data && res.data.success) {
+        setChartData(res.data.data);
       }
-    };
-    fetchChart();
-    return () => {
-      active = false;
-    };
+    } catch (err) {
+      console.error('[Dashboard] Failed to fetch chart data:', err);
+    } finally {
+      setChartLoading(false);
+    }
   }, [selectedRange]);
 
   useEffect(() => {
-    let active = true;
-    const fetchScans = async () => {
-      setScansLoading(true);
-      try {
-        const res = await api.get('/scans?limit=5');
-        if (active) {
-          setScans(res.data || []);
-        }
-      } catch (err) {
-        console.error('[Dashboard] Failed to fetch recent scans:', err);
-      } finally {
-        if (active) setScansLoading(false);
-      }
-    };
-    fetchScans();
-    return () => {
-      active = false;
-    };
+    fetchChart();
+  }, [fetchChart]);
+
+  const fetchScans = useCallback(async () => {
+    setScansLoading(true);
+    try {
+      const res = await api.get('/scans?limit=5');
+      setScans(res.data || []);
+    } catch (err) {
+      console.error('[Dashboard] Failed to fetch recent scans:', err);
+    } finally {
+      setScansLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchScans();
+  }, [fetchScans]);
 
   const [activeAlternativeScan, setActiveAlternativeScan] = useState(null);
   const [altData, setAltData] = useState(null);
@@ -367,8 +364,17 @@ export default function Dashboard() {
 
       {/* Recent Scans */}
       <div className="bg-white border border-mist rounded-xl p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="font-display font-bold text-ink">Recent Scans</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div className="flex items-center gap-3">
+            <h2 className="font-display font-bold text-ink">Recent Scans</h2>
+            <PrivacyDataControls
+              onClearSuccess={() => {
+                refreshStats();
+                fetchScans();
+                fetchChart();
+              }}
+            />
+          </div>
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/app/history')} className="text-xs text-[#1a7a4a] font-semibold hover:text-forest transition-colors font-body focus:outline-none focus:ring-2 focus:ring-forest/20 rounded">View All →</button>
             <button onClick={() => navigate('/app/upload-center')} className="text-xs text-[#1a7a4a] font-semibold hover:text-forest transition-colors font-body focus:outline-none focus:ring-2 focus:ring-forest/20 rounded">+ New Scan</button>
@@ -429,6 +435,14 @@ export default function Dashboard() {
                           >
                             <Leaf className="w-2.5 h-2.5" /> Alternative
                           </button>
+                          {s.type === 'receipt' && s.calculationDetails?.receiptBreakdown && (
+                            <button
+                              onClick={() => setActiveReceiptScan(s)}
+                              className="text-[10px] text-rose-600 hover:underline flex items-center gap-0.5 font-bold cursor-pointer"
+                            >
+                              <Receipt className="w-2.5 h-2.5" /> Breakdown
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>
@@ -533,6 +547,30 @@ export default function Dashboard() {
             ) : (
               <AlternativeDetails data={altData} />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Multi-Item Receipt Breakdown Modal Overlay */}
+      {activeReceiptScan && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
+          <div className="bg-white border border-mist rounded-2xl max-w-lg w-full shadow-2xl p-6 relative font-body max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setActiveReceiptScan(null)}
+              className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2 mb-1">
+              <Receipt className="w-5 h-5 text-forest" />
+              <h3 className="font-display font-bold text-lg text-ink">Multi-Item Receipt Breakdown</h3>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">
+              {activeReceiptScan.parsedFields?.storeName || activeReceiptScan.originalFilename || 'Grocery Receipt'}
+              {activeReceiptScan.parsedFields?.totalAmount != null && ` • Total: $${activeReceiptScan.parsedFields.totalAmount.toFixed(2)}`}
+            </p>
+            
+            <ReceiptBreakdown breakdown={activeReceiptScan.calculationDetails?.receiptBreakdown} />
           </div>
         </div>
       )}

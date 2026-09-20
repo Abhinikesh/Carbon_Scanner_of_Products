@@ -14,6 +14,7 @@ import ErrorBanner from '../components/common/ErrorBanner.jsx';
 import ScoreBadge from '../components/common/ScoreBadge.jsx';
 import { AlternativeDetails } from './UploadCenter.jsx';
 import ReceiptBreakdown from '../components/ReceiptBreakdown.jsx';
+import PrivacyDataControls from '../components/PrivacyDataControls.jsx';
 
 const TYPE_LABELS = { product: 'Product', receipt: 'Receipt', flight: 'Flight', barcode: 'Barcode' };
 
@@ -177,14 +178,17 @@ export default function ScanHistory() {
       <header className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-[32px] font-bold text-ink leading-tight mb-1 font-display">Scan History</h1>
-          <p className="text-gray-500 text-sm font-body">All your carbon scans in one place.</p>
+          <p className="text-gray-500 text-sm font-body">All your carbon scans in one place — privacy-first and open.</p>
         </div>
-        <button
-          onClick={() => navigate('/app/upload-center')}
-          className="flex items-center gap-2 bg-forest hover:bg-forest-dark text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-colors font-body focus:outline-none focus:ring-2 focus:ring-forest/20"
-        >
-          <CloudUpload className="w-4 h-4" /> New Scan
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <PrivacyDataControls onClearSuccess={() => { fetchScans(true); refreshStats(); }} />
+          <button
+            onClick={() => navigate('/app/upload-center')}
+            className="flex items-center gap-2 bg-forest hover:bg-forest-dark text-white font-bold px-4 py-2 rounded-xl text-sm transition-colors font-body focus:outline-none focus:ring-2 focus:ring-forest/20 cursor-pointer shadow-xs"
+          >
+            <CloudUpload className="w-4 h-4" /> New Scan
+          </button>
+        </div>
       </header>
 
       {/* Toolbar */}

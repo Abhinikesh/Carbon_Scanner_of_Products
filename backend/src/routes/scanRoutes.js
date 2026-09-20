@@ -15,6 +15,9 @@ router.get('/stats', scanController.getScanStats);
 // GET /api/scans/chart - Get chart data aggregation
 router.get('/chart', scanController.getScanChart);
 
+// GET /api/scans/export - Export all scans in CSV or JSON
+router.get('/export', scanController.exportScans);
+
 // GET /api/scans - List all scans for user
 router.get('/', scanController.listScans);
 
@@ -29,6 +32,9 @@ router.post('/', scanCreateLimiter, uploadSingle, scanController.createScan);
 
 // PATCH /api/scans/:id/category - Update scan category and recalculate CO2
 router.patch('/:id/category', validateObjectId('id'), scanController.updateScanCategory);
+
+// DELETE /api/scans - Clear all scans for user (One-click privacy wipe)
+router.delete('/', scanController.clearAllScans);
 
 // DELETE /api/scans/:id - Delete a scan
 router.delete('/:id', validateObjectId('id'), scanController.deleteScan);
