@@ -164,6 +164,37 @@ async function createScan(req, res, next) {
         }
       }
 
+      if (type === 'receipt' && req.file && req.file.buffer) {
+        try {
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+          const base64Image = req.file.buffer.toString('base64');
+
+          const geminiResult = await model.generateContent([
+            {
+              inlineData: {
+                mimeType: req.file.mimetype,
+                data: base64Image,
+              },
+            },
+            'You are a receipt OCR and line-item parser. Examine this grocery or retail receipt image. Extract store name, total amount, and all purchased items with their individual prices if visible. Return strictly valid JSON in this structure: {"storeName": string or null, "totalAmount": number or null, "items": [{"name": string, "price": number or null}]}. Do not include markdown formatting or backticks, just the JSON string.'
+          ]);
+
+          const rawJson = geminiResult.response.text().trim().replace(/^```json\s*|\s*```$/g, '');
+          const geminiParsed = JSON.parse(rawJson);
+          if (geminiParsed) {
+            if (geminiParsed.storeName) parsed.storeName = geminiParsed.storeName;
+            if (geminiParsed.totalAmount && !isNaN(parseFloat(geminiParsed.totalAmount))) {
+              parsed.totalAmount = parseFloat(geminiParsed.totalAmount);
+            }
+            if (Array.isArray(geminiParsed.items) && geminiParsed.items.length > 0) {
+              parsed.extractedItems = geminiParsed.items;
+            }
+          }
+        } catch (geminiErr) {
+          console.warn('[Gemini Vision Receipt] Fallback to OCR text parsing:', geminiErr?.message || geminiErr);
+        }
+      }
+
       // For non-product types, aiLabels stays empty — calculateCarbon handles them via OCR text.
 
       // ── Carbon gate ─────────────────────────────────────────────────────────
@@ -202,7 +233,7 @@ async function createScan(req, res, next) {
           };
 
           const details = {};
-          const extraKeys = ['distanceKm', 'estimatedAmount', 'note', 'calculationMethod'];
+          const extraKeys = ['distanceKm', 'estimatedAmount', 'note', 'calculationMethod', 'receiptBreakdown'];
           for (const k of extraKeys) {
             if (carbonResult[k] !== undefined) {
               details[k] = carbonResult[k];
@@ -280,7 +311,25 @@ async function listScans(req, res, next) {
     }
 
     const scans = await query;
-    return res.status(200).json(scans);
+    const { calculateReceiptBreakdown } = require('../utils/receiptEngine');
+
+    const enrichedScans = scans.map((s) => {
+      const doc = s.toObject ? s.toObject() : s;
+      if (doc.type === 'receipt' && (!doc.calculationDetails || !doc.calculationDetails.receiptBreakdown)) {
+        const itemLines = doc.parsedFields?.itemLines || [];
+        const breakdown = calculateReceiptBreakdown(
+          doc.parsedFields?.receiptItems || doc.parsedFields?.extractedItems || [],
+          doc.parsedFields?.totalAmount,
+          doc.rawText || itemLines.join('\n')
+        );
+        if (breakdown) {
+          doc.calculationDetails = { ...(doc.calculationDetails || {}), receiptBreakdown: breakdown };
+        }
+      }
+      return doc;
+    });
+
+    return res.status(200).json(enrichedScans);
   } catch (error) {
     next(error);
   }
@@ -442,7 +491,22 @@ async function getScan(req, res, next) {
     if (!scan) {
       return res.status(404).json({ success: false, message: 'Scan not found' });
     }
-    return res.status(200).json(scan);
+
+    const doc = scan.toObject ? scan.toObject() : scan;
+    if (doc.type === 'receipt' && (!doc.calculationDetails || !doc.calculationDetails.receiptBreakdown)) {
+      const { calculateReceiptBreakdown } = require('../utils/receiptEngine');
+      const itemLines = doc.parsedFields?.itemLines || [];
+      const breakdown = calculateReceiptBreakdown(
+        doc.parsedFields?.receiptItems || doc.parsedFields?.extractedItems || [],
+        doc.parsedFields?.totalAmount,
+        doc.rawText || itemLines.join('\n')
+      );
+      if (breakdown) {
+        doc.calculationDetails = { ...(doc.calculationDetails || {}), receiptBreakdown: breakdown };
+      }
+    }
+
+    return res.status(200).json(doc);
   } catch (error) {
     next(error);
   }

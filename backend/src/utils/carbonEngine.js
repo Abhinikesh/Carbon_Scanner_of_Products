@@ -244,10 +244,23 @@ async function calculateCarbon(scanType, parsedFields = {}, barcodeValue = null,
       estimatedAmount = true;
     }
 
+    const { calculateReceiptBreakdown } = require('./receiptEngine');
+    const itemsInput = parsedFields.extractedItems || parsedFields.receiptItems || [];
+    const rawTextForBreakdown = parsedFields.rawText || itemLines.join('\n');
+    const breakdown = calculateReceiptBreakdown(itemsInput, amount, rawTextForBreakdown);
+
     const result = calculateReceiptCarbon(categoryKey, amount);
+
+    let finalCo2 = result.co2Kg;
+    if (breakdown && breakdown.totalCartCo2Kg > 0) {
+      finalCo2 = breakdown.totalCartCo2Kg;
+    }
+
     return {
       ...result,
-      estimatedAmount
+      co2Kg: finalCo2,
+      estimatedAmount,
+      receiptBreakdown: breakdown
     };
   }
 

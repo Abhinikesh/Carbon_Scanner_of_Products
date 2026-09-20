@@ -310,7 +310,6 @@ export default function App() {
       <Route path="/app/recycle" element={<AppLayout><RecycleFinder /></AppLayout>} />
       <Route path="/app/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
       <Route path="/app/history" element={<AppLayout><ScanHistory /></AppLayout>} />
-      <Route path="/app/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
 
       {/* Convenient Direct Aliases */}
       <Route path="/upload" element={<Navigate to="/app/upload-center" replace />} />
@@ -319,7 +318,8 @@ export default function App() {
       <Route path="/history" element={<Navigate to="/app/history" replace />} />
       <Route path="/leaderboard" element={<Navigate to="/app/dashboard" replace />} />
       <Route path="/app/leaderboard" element={<Navigate to="/app/dashboard" replace />} />
-      <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
+      <Route path="/settings" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/app/settings" element={<Navigate to="/app/dashboard" replace />} />
 
       {/* Wildcard Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   BarChart2, Leaf, Zap, Award, CloudUpload,
-  CheckCircle2, Clock, TrendingDown, X, Recycle, Loader2
+  CheckCircle2, Clock, TrendingDown, X, Recycle, Loader2,
+  Car, Trees, Smartphone, Lightbulb, Globe, Flame
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -132,6 +133,13 @@ export default function Dashboard() {
     ? `${stats.sustainabilityScore}/100`
     : '—';
 
+  const co2Num = typeof displayTotalCo2 === 'number' ? displayTotalCo2 : parseFloat(displayTotalCo2) || 0;
+  const kmDriven = Math.round(co2Num / 0.25);
+  const milesDriven = Math.round(kmDriven * 0.621371);
+  const treesNeeded = co2Num > 0 ? (co2Num / 21.77).toFixed(1) : '0';
+  const smartphoneCharges = Math.round(co2Num * 121.6);
+  const ledYears = co2Num > 0 ? (co2Num / 116).toFixed(1) : '0';
+
   return (
     <div className="px-10 pt-8 pb-10 bg-paper">
       <header className="mb-6 flex items-center justify-between">
@@ -206,7 +214,7 @@ export default function Dashboard() {
         <div className="bg-white border border-mist rounded-xl p-5 shadow-sm flex flex-col justify-between min-h-[140px]">
           <div>
             <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3 bg-orange-50 text-orange-600">
-              <span className="text-[18px]">🔥</span>
+              <Flame className="w-[18px] h-[18px] text-orange-600" />
             </div>
             <p className="text-2xl font-bold text-ink font-mono tabular-nums">
               {user?.currentStreakDays ?? 0}
@@ -216,6 +224,97 @@ export default function Dashboard() {
           <p className="text-[10px] text-gray-400 mt-2 font-body leading-tight">
             {user?.currentStreakDays > 0 ? `${user.currentStreakDays} day streak!` : 'Start your streak today'}
           </p>
+        </div>
+      </div>
+
+      {/* Real-World Carbon Equivalents */}
+      <div className="bg-white border border-mist rounded-xl p-6 mb-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+          <div>
+            <h2 className="font-display font-bold text-ink text-base flex items-center gap-2">
+              <Globe className="w-4 h-4 text-forest" /> Real-World Carbon Equivalents
+            </h2>
+            <p className="text-xs text-gray-500 font-body mt-0.5">
+              What your <span className="font-mono font-bold text-ink">{displayTotalCo2} kg</span> CO₂e footprint translates to in tangible physical benchmarks.
+            </p>
+          </div>
+          <span className="text-[11px] font-mono font-semibold text-forest bg-forest/5 border border-forest/20 px-2.5 py-1 rounded-full self-start sm:self-auto">
+            EPA & DEFRA Benchmarks
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Driving */}
+          <div className="bg-paper border border-mist rounded-xl p-4 flex flex-col justify-between hover:border-blue-200 transition-colors">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-600 font-display">Miles Driven</span>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600">
+                  <Car className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-ink font-mono tabular-nums">
+                ~{kmDriven.toLocaleString()} <span className="text-xs font-sans font-medium text-gray-500">km</span>
+              </p>
+            </div>
+            <p className="text-[11px] text-gray-500 font-body mt-2 leading-tight">
+              Equivalent to driving ~{milesDriven.toLocaleString()} miles in an average petrol car.
+            </p>
+          </div>
+
+          {/* Card 2: Trees */}
+          <div className="bg-paper border border-mist rounded-xl p-4 flex flex-col justify-between hover:border-emerald-200 transition-colors">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-600 font-display">Trees Needed</span>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50 text-forest">
+                  <Trees className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-ink font-mono tabular-nums">
+                ~{treesNeeded} <span className="text-xs font-sans font-medium text-gray-500">trees</span>
+              </p>
+            </div>
+            <p className="text-[11px] text-gray-500 font-body mt-2 leading-tight">
+              Requires ~{treesNeeded} mature trees for an entire year to offset.
+            </p>
+          </div>
+
+          {/* Card 3: Smartphone charges */}
+          <div className="bg-paper border border-mist rounded-xl p-4 flex flex-col justify-between hover:border-amber-200 transition-colors">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-600 font-display">Smartphone Charges</span>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-50 text-amber-600">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-ink font-mono tabular-nums">
+                ~{smartphoneCharges.toLocaleString()}
+              </p>
+            </div>
+            <p className="text-[11px] text-gray-500 font-body mt-2 leading-tight">
+              Equivalent to ~{smartphoneCharges.toLocaleString()} full smartphone charges.
+            </p>
+          </div>
+
+          {/* Card 4: LED bulbs */}
+          <div className="bg-paper border border-mist rounded-xl p-4 flex flex-col justify-between hover:border-indigo-200 transition-colors">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-gray-600 font-display">LED Bulb Runtime</span>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-50 text-indigo-600">
+                  <Lightbulb className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-ink font-mono tabular-nums">
+                ~{ledYears} <span className="text-xs font-sans font-medium text-gray-500">years</span>
+              </p>
+            </div>
+            <p className="text-[11px] text-gray-500 font-body mt-2 leading-tight">
+              Powers a standard 10W LED bulb continuously 24/7.
+            </p>
+          </div>
         </div>
       </div>
 

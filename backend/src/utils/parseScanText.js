@@ -33,19 +33,24 @@ function parseFields(type, rawText = '') {
       }
     }
 
-    // 3. Extract itemLines: up to 10 non-empty lines that aren't the total line (we filter out lines containing 'total')
+    // 3. Extract itemLines: lines that aren't the total line
     const totalLineRegex = /total/i;
     const itemLines = [];
     for (const line of lines) {
-      if (itemLines.length >= 10) break;
+      if (itemLines.length >= 15) break;
       if (totalLineRegex.test(line)) continue;
       itemLines.push(line);
     }
 
+    // Extract itemized items using receiptEngine
+    const { parseReceiptItemsFromText } = require('./receiptEngine');
+    const receiptItems = parseReceiptItemsFromText(rawText);
+
     return {
       storeName,
       totalAmount,
-      itemLines
+      itemLines,
+      receiptItems
     };
   }
 

@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   ShoppingCart, Receipt, Plane, Barcode, FileUp, Plus,
   Brain, FileText, CheckCircle2, ShieldCheck, CheckCheck,
-  FileSearch, ScanLine, X, Loader2, AlertCircle, ChevronDown, ChevronUp, Recycle, Leaf
+  FileSearch, ScanLine, X, Loader2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, Recycle, Leaf, Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Toast } from '../App.jsx';
@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { decodeBarcodeFromFile } from '../lib/barcodeScanner';
 import { submitScan } from '../lib/scanSubmission';
 import ScoreBadge from '../components/common/ScoreBadge.jsx';
+import ReceiptBreakdown from '../components/ReceiptBreakdown.jsx';
 
 const TABS = [
   { id: 'product', label: 'Product', Icon: ShoppingCart },
@@ -124,6 +125,46 @@ export default function UploadCenter() {
       setAltLoading(false);
     }
   }
+
+  const handleLoadSampleReceipt = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 460;
+      canvas.height = 360;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 460, 360);
+      ctx.fillStyle = '#111827';
+      ctx.font = 'bold 16px monospace';
+      ctx.fillText('WHOLE FOODS MARKET', 25, 45);
+      ctx.font = '13px monospace';
+      ctx.fillText('09/20/2026   STORE #102', 25, 70);
+      ctx.fillText('--------------------------------', 25, 90);
+      ctx.fillText('HONEYCRISP APPLES 1.2KG    $3.49', 25, 120);
+      ctx.fillText('CHICKEN BREAST 1LB        $10.99', 25, 150);
+      ctx.fillText('TIDE LAUNDRY DETERGENT    $14.99', 25, 180);
+      ctx.fillText('GROUND BEEF 80/20 1LB     $16.50', 25, 210);
+      ctx.fillText('ORGANIC WHOLE MILK 1GAL    $4.29', 25, 240);
+      ctx.fillText('--------------------------------', 25, 265);
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText('TOTAL                     $50.26', 25, 290);
+      ctx.font = '11px monospace';
+      ctx.fillText('THANK YOU FOR SHOPPING WITH US', 25, 325);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'grocery_receipt_sample.png', { type: 'image/png' });
+        const preview = URL.createObjectURL(blob);
+        setTabFiles((prev) => ({
+          ...prev,
+          receipt: [{ file, preview }]
+        }));
+        showToast('Sample grocery receipt loaded! Click "Process with AI Lens" below.', 'success');
+      }, 'image/png');
+    } catch (err) {
+      console.error('Failed to generate sample receipt image:', err);
+    }
+  };
 
   const fileInputRef = useRef(null);
   const addMoreInputRef = useRef(null);
@@ -376,6 +417,26 @@ export default function UploadCenter() {
               <h2 className="font-display font-bold text-base text-ink">Import Documents</h2>
               <span className="font-mono text-[9px] font-bold text-gray-400 uppercase tracking-widest">Multi-File Supported</span>
             </div>
+
+            {/* Multi-Item Receipt Breakdown callout when receipt tab is selected */}
+            {activeTab === 'receipt' && (
+              <div className="mb-4 bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-forest flex-shrink-0" />
+                  <p className="text-xs text-forest font-medium font-body">
+                    <strong>Multi-Item Receipt Breakdown:</strong> Automatically detects line items and reveals the <strong className="text-rose-700">#1 Carbon Offender</strong> in your cart.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLoadSampleReceipt}
+                  className="text-xs font-bold text-forest bg-white border border-emerald-300 hover:bg-emerald-50 px-2.5 py-1 rounded-lg shadow-xs flex-shrink-0 transition-colors flex items-center gap-1 cursor-pointer font-body"
+                >
+                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                  Try Sample Receipt
+                </button>
+              </div>
+            )}
 
             {/* Drop zone */}
             <div
@@ -640,6 +701,16 @@ export default function UploadCenter() {
                               </span>
                             )}
 
+                            {/* Prominent #1 Carbon Offender preview badge for receipts */}
+                            {scan.status === 'ocr_done' && scan.type === 'receipt' && scan.calculationDetails?.receiptBreakdown?.topOffender && (
+                              <div className="flex items-center gap-1 mt-1 text-[10px] text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md font-body max-w-full">
+                                <AlertTriangle className="w-3 h-3 text-rose-500 flex-shrink-0" />
+                                <span className="truncate">
+                                  #1 Offender: <strong>{scan.calculationDetails.receiptBreakdown.topOffender.name}</strong> ({scan.calculationDetails.receiptBreakdown.topOffender.co2Kg} kg • {scan.calculationDetails.receiptBreakdown.topOffender.percentage}%)
+                                </span>
+                              </div>
+                            )}
+
                             {/* If CO2 calculation failed or route unverified, show the note message with grey dot */}
                             {scan.status === 'ocr_done' && scan.co2Kg == null && scan.parsedFields?.note && (
                               <p className="text-[10px] text-gray-500 mt-1 leading-normal italic font-body max-w-full truncate">
@@ -766,15 +837,23 @@ export default function UploadCenter() {
                                           Manually Corrected
                                         </div>
                                       )}
-                                      {scan.parsedFields?.itemLines && scan.parsedFields.itemLines.length > 0 && (
-                                        <div className="mt-1">
-                                          <span className="text-gray-400 uppercase font-bold block mb-1">Items Lines:</span>
-                                          <div className="bg-white border border-gray-100 p-1.5 rounded max-h-24 overflow-y-auto leading-normal text-gray-600 flex flex-col gap-0.5 font-sans">
-                                            {scan.parsedFields.itemLines.map((line, idx) => (
-                                              <div key={idx} className="truncate select-text">{line}</div>
-                                            ))}
-                                          </div>
+
+                                      {/* Multi-Item Receipt Breakdown */}
+                                      {scan.calculationDetails?.receiptBreakdown ? (
+                                        <div className="mt-3 pt-2 border-t border-gray-200">
+                                          <ReceiptBreakdown breakdown={scan.calculationDetails.receiptBreakdown} />
                                         </div>
+                                      ) : (
+                                        scan.parsedFields?.itemLines && scan.parsedFields.itemLines.length > 0 && (
+                                          <div className="mt-1">
+                                            <span className="text-gray-400 uppercase font-bold block mb-1">Items Lines:</span>
+                                            <div className="bg-white border border-gray-100 p-1.5 rounded max-h-24 overflow-y-auto leading-normal text-gray-600 flex flex-col gap-0.5 font-sans">
+                                              {scan.parsedFields.itemLines.map((line, idx) => (
+                                                <div key={idx} className="truncate select-text">{line}</div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )
                                       )}
                                     </>
                                   )}

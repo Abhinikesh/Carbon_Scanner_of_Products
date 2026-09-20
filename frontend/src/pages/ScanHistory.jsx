@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   BarChart2, TrendingDown, CheckCircle2, Clock, X,
   Leaf, Recycle, Loader2, ChevronDown, Filter, Search,
-  SortAsc, SortDesc, CloudUpload, Trash2
+  SortAsc, SortDesc, CloudUpload, Trash2,
+  ShoppingBag, Receipt, Plane, Barcode, AlertTriangle
 } from 'lucide-react';
 import api from '../lib/api';
 import { useScanStats } from '../context/ScanStatsContext.jsx';
@@ -12,14 +13,17 @@ import EmptyState from '../components/common/EmptyState.jsx';
 import ErrorBanner from '../components/common/ErrorBanner.jsx';
 import ScoreBadge from '../components/common/ScoreBadge.jsx';
 import { AlternativeDetails } from './UploadCenter.jsx';
+import ReceiptBreakdown from '../components/ReceiptBreakdown.jsx';
 
 const TYPE_LABELS = { product: 'Product', receipt: 'Receipt', flight: 'Flight', barcode: 'Barcode' };
-const TYPE_ICONS = {
-  product: '🛍️',
-  receipt: '🧾',
-  flight: '✈️',
-  barcode: '📦'
-};
+
+function TypeIcon({ type, className = "w-4 h-4" }) {
+  if (type === 'receipt') return <Receipt className={`${className} text-forest`} />;
+  if (type === 'flight') return <Plane className={`${className} text-blue-600`} />;
+  if (type === 'barcode') return <Barcode className={`${className} text-purple-600`} />;
+  return <ShoppingBag className={`${className} text-emerald-600`} />;
+}
+
 const STATUS_OPTIONS = ['all', 'ocr_done', 'processing', 'failed'];
 const TYPE_OPTIONS = ['all', 'product', 'receipt', 'flight', 'barcode'];
 const PAGE_SIZE = 15;
@@ -71,6 +75,9 @@ export default function ScanHistory() {
   const [altData, setAltData] = useState(null);
   const [altLoading, setAltLoading] = useState(false);
   const [altError, setAltError] = useState(null);
+
+  // Multi-item Receipt Breakdown modal
+  const [activeBreakdownScan, setActiveBreakdownScan] = useState(null);
 
   async function fetchScans(reset = false) {
     const isReset = reset;
@@ -280,13 +287,14 @@ export default function ScanHistory() {
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {filtered.map(scan => (
               <ScanCard
-            key={scan._id}
-            scan={scan}
-            onAlternative={() => handleShowAlternative(scan)}
-            onRecycle={() => navigate(`/app/recycle?query=${encodeURIComponent(scan.category || '')}&scanId=${scan._id}`)}
-            onDelete={() => handleDelete(scan._id)}
-            isDeleting={deletingId === scan._id}
-          />
+                key={scan._id}
+                scan={scan}
+                onAlternative={() => handleShowAlternative(scan)}
+                onBreakdown={() => setActiveBreakdownScan(scan)}
+                onRecycle={() => navigate(`/app/recycle?query=${encodeURIComponent(scan.category || '')}&scanId=${scan._id}`)}
+                onDelete={() => handleDelete(scan._id)}
+                isDeleting={deletingId === scan._id}
+              />
             ))}
           </div>
 
@@ -296,7 +304,7 @@ export default function ScanHistory() {
               <button
                 onClick={() => fetchScans(false)}
                 disabled={loadingMore}
-                className="flex items-center gap-2 px-6 py-2.5 border border-mist rounded-xl text-sm font-bold text-gray-700 hover:bg-white hover:border-forest/30 transition-all font-body disabled:opacity-60"
+                className="flex items-center gap-2 px-6 py-2.5 bg-white border border-mist hover:border-forest/30 text-ink font-bold text-xs rounded-xl shadow-sm transition-all font-body disabled:opacity-50"
               >
                 {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
                 Load more
@@ -329,24 +337,46 @@ export default function ScanHistory() {
           </div>
         </div>
       )}
+
+      {/* Multi-Item Receipt Breakdown Modal */}
+      {activeBreakdownScan && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
+          <div className="bg-white border border-mist rounded-2xl max-w-lg w-full shadow-2xl p-6 relative font-body max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setActiveBreakdownScan(null)}
+              className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2 mb-1">
+              <Receipt className="w-5 h-5 text-forest" />
+              <h3 className="font-display font-bold text-lg text-ink">Multi-Item Receipt Breakdown</h3>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">
+              {activeBreakdownScan.parsedFields?.storeName || activeBreakdownScan.originalFilename || 'Grocery Receipt'}
+              {activeBreakdownScan.parsedFields?.totalAmount != null && ` • Total: $${activeBreakdownScan.parsedFields.totalAmount.toFixed(2)}`}
+            </p>
+            <ReceiptBreakdown breakdown={activeBreakdownScan.calculationDetails?.receiptBreakdown} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function ScanCard({ scan, onAlternative, onRecycle }) {
+function ScanCard({ scan, onAlternative, onBreakdown, onRecycle, onDelete, isDeleting }) {
   const isBarcode = scan.type === 'barcode';
   const displayName = isBarcode
     ? `Barcode: ${scan.barcodeValue || '—'}`
     : (scan.originalFilename || 'Untitled');
-  const typeEmoji = TYPE_ICONS[scan.type] || '📄';
 
   return (
     <div className="bg-white border border-mist rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-forest/20 transition-all flex flex-col gap-4">
       {/* Top row */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <div className="w-9 h-9 bg-forest/5 rounded-xl flex items-center justify-center flex-shrink-0 text-base">
-            {typeEmoji}
+          <div className="w-9 h-9 bg-forest/5 rounded-xl flex items-center justify-center flex-shrink-0">
+            <TypeIcon type={scan.type} />
           </div>
           <div className="min-w-0">
             <p className="font-bold text-xs text-ink font-display truncate leading-tight" title={displayName}>
@@ -379,6 +409,16 @@ function ScanCard({ scan, onAlternative, onRecycle }) {
         </div>
       )}
 
+      {/* Prominent #1 Carbon Offender snippet for receipts */}
+      {scan.status === 'ocr_done' && scan.type === 'receipt' && scan.calculationDetails?.receiptBreakdown?.topOffender && (
+        <div className="flex items-center gap-1.5 text-[10px] text-rose-700 bg-rose-50 border border-rose-200 px-2 py-1 rounded-lg">
+          <AlertTriangle className="w-3 h-3 text-rose-500 flex-shrink-0" />
+          <span className="truncate">
+            #1 Offender: <strong>{scan.calculationDetails.receiptBreakdown.topOffender.name}</strong> ({scan.calculationDetails.receiptBreakdown.topOffender.co2Kg} kg • {scan.calculationDetails.receiptBreakdown.topOffender.percentage}%)
+          </span>
+        </div>
+      )}
+
       {/* Date */}
       <div className="flex items-center justify-between mt-auto">
         <p className="text-[10px] text-gray-400 font-mono">{formatDate(scan.createdAt)}</p>
@@ -386,17 +426,25 @@ function ScanCard({ scan, onAlternative, onRecycle }) {
         {/* Action links */}
         {scan.status === 'ocr_done' && (
           <div className="flex items-center gap-3">
+            {scan.type === 'receipt' && scan.calculationDetails?.receiptBreakdown && (
+              <button
+                onClick={onBreakdown}
+                className="text-[10px] font-bold text-rose-600 hover:underline flex items-center gap-0.5 cursor-pointer"
+              >
+                <Receipt className="w-2.5 h-2.5" /> Breakdown
+              </button>
+            )}
             {scan.type !== 'flight' && scan.category && (
               <button
                 onClick={onRecycle}
-                className="text-[10px] font-bold text-[#1a7a4a] hover:underline flex items-center gap-0.5"
+                className="text-[10px] font-bold text-[#1a7a4a] hover:underline flex items-center gap-0.5 cursor-pointer"
               >
                 <Recycle className="w-2.5 h-2.5" /> Recycle
               </button>
             )}
             <button
               onClick={onAlternative}
-              className="text-[10px] font-bold text-[#1a7a4a] hover:underline flex items-center gap-0.5"
+              className="text-[10px] font-bold text-[#1a7a4a] hover:underline flex items-center gap-0.5 cursor-pointer"
             >
               <Leaf className="w-2.5 h-2.5" /> Alternative
             </button>
