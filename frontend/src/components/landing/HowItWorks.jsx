@@ -68,10 +68,10 @@ export default function HowItWorks() {
         {/* CTA below */}
         <div className="text-center">
           <Link
-            to="/signup"
-            className="inline-flex items-center justify-center bg-forest hover:bg-forest-dark text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-forest/20"
+            to="/app/upload-center"
+            className="inline-flex items-center justify-center bg-forest hover:bg-forest-dark text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-forest/20 shadow-sm"
           >
-            Create Your Free Account
+            Start Scanning Now →
           </Link>
         </div>
       </div>

@@ -10,7 +10,6 @@ export function ScanStatsProvider({ children }) {
   const { isAuthenticated } = useAuth();
 
   const fetchStats = async () => {
-    if (!isAuthenticated) return;
     setIsLoading(true);
     try {
       const res = await api.get('/scans/stats');
@@ -29,15 +28,9 @@ export function ScanStatsProvider({ children }) {
     }
   };
 
-  // Re-fetch stats when the user authenticates
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchStats();
-    } else {
-      setStats(null);
-      setIsLoading(false);
-    }
-  }, [isAuthenticated]);
+    fetchStats();
+  }, []);
 
   return (
     <ScanStatsContext.Provider value={{ stats, isLoading, refreshStats: fetchStats }}>

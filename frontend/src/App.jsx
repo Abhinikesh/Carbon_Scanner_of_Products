@@ -2,44 +2,30 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import {
   Leaf, Search, Bell, BarChart2, CloudUpload, LayoutGrid,
-  Settings, QrCode, X, ChevronDown, User, LogOut, Recycle, Menu,
-  Trophy, History
+  QrCode, X, Recycle, Menu, History
 } from 'lucide-react';
 
 import Home         from './pages/Home.jsx';
 import UploadCenter from './pages/UploadCenter.jsx';
 import RecycleFinder from './pages/RecycleFinder.jsx';
 import Dashboard    from './pages/Dashboard.jsx';
-import SettingsPage from './pages/Settings.jsx';
-import Login        from './pages/Login.jsx';
-import Signup       from './pages/Signup.jsx';
 import LandingPage  from './pages/LandingPage.jsx';
-import Leaderboard  from './pages/Leaderboard.jsx';
 import ScanHistory  from './pages/ScanHistory.jsx';
 
-import ProtectedRoute  from './components/ProtectedRoute.jsx';
-import PublicOnlyRoute from './components/PublicOnlyRoute.jsx';
-import { useAuth }     from './context/AuthContext.jsx';
 import { ScanStatsProvider, useScanStats } from './context/ScanStatsContext.jsx';
 import QuickScanModal from './components/QuickScanModal.jsx';
-import Avatar from './components/common/Avatar.jsx';
 
 /* ─── NAVBAR ───────────────────────────────────────────────────────────── */
-function Navbar({ onMenuClick }) {
+function Navbar({ onMenuClick, onQuickScanClick }) {
   const location  = useLocation();
-  const navigate  = useNavigate();
-  const { user, logout } = useAuth();
-  const [bellOpen,   setBellOpen]   = useState(false);
-  const [avatarOpen, setAvatarOpen] = useState(false);
-  const [search,     setSearch]     = useState('');
-  const bellRef   = useRef(null);
-  const avatarRef = useRef(null);
+  const [bellOpen, setBellOpen] = useState(false);
+  const [search,   setSearch]   = useState('');
+  const bellRef = useRef(null);
 
-  // Close dropdowns on outside click
+  // Close dropdown on outside click
   useEffect(() => {
     function handle(e) {
-      if (bellRef.current   && !bellRef.current.contains(e.target))   setBellOpen(false);
-      if (avatarRef.current && !avatarRef.current.contains(e.target)) setAvatarOpen(false);
+      if (bellRef.current && !bellRef.current.contains(e.target)) setBellOpen(false);
     }
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
@@ -56,13 +42,6 @@ function Navbar({ onMenuClick }) {
     if (to === '/app/home') return location.pathname === '/app/home';
     return location.pathname.startsWith(to);
   };
-
-  async function handleLogout() {
-    setAvatarOpen(false);
-    await logout();
-    navigate('/');
-  }
-
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-14 bg-white flex items-center justify-between px-6 z-20 border-b border-mist">
@@ -119,14 +98,15 @@ function Navbar({ onMenuClick }) {
           )}
         </div>
 
-        {/* Bell */}
+        {/* Bell Notifications */}
         <div className="relative" ref={bellRef}>
           <button
             onClick={() => setBellOpen(o => !o)}
-            className="text-gray-700 hover:text-gray-900 p-1 rounded-full transition-colors relative"
+            className="text-gray-700 hover:text-gray-900 p-1.5 rounded-full hover:bg-gray-100 transition-colors relative"
+            aria-label="Notifications"
           >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-forest rounded-full" />
+            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-forest rounded-full" />
           </button>
           {bellOpen && (
             <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-mist rounded-xl shadow-lg z-50 p-4">
@@ -136,34 +116,14 @@ function Navbar({ onMenuClick }) {
           )}
         </div>
 
-        {/* Avatar */}
-        <div className="relative" ref={avatarRef}>
-          <button onClick={() => setAvatarOpen(o => !o)} className="flex items-center gap-1.5 focus:outline-none">
-            <Avatar src={user?.avatar} name={user?.name} size={32} className="border border-mist" />
-            <span className="hidden sm:inline text-xs font-semibold text-ink font-body max-w-[80px] truncate">
-              {user?.name}
-            </span>
-            <ChevronDown className="w-3 h-3 text-gray-400 animate-fade-in" />
-          </button>
-          {avatarOpen && (
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-mist rounded-xl shadow-lg z-50 py-1">
-              <div className="px-4 py-2 border-b border-mist/50">
-                <p className="text-xs font-bold text-ink truncate font-display">{user?.name}</p>
-                <p className="text-[10px] text-gray-400 truncate font-body">{user?.email}</p>
-              </div>
-              <Link to="/app/settings" onClick={() => setAvatarOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-body">
-                <User className="w-4 h-4" /> Profile
-              </Link>
-              <Link to="/app/settings" onClick={() => setAvatarOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-body">
-                <Settings className="w-4 h-4" /> Settings
-              </Link>
-              <div className="border-t border-mist my-1" />
-              <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors font-body text-left">
-                <LogOut className="w-4 h-4" /> Logout
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Quick Scan CTA Button */}
+        <button
+          onClick={onQuickScanClick}
+          className="hidden sm:flex items-center gap-1.5 bg-forest hover:bg-forest-dark text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all font-body focus:outline-none focus:ring-2 focus:ring-forest/20"
+        >
+          <QrCode className="w-3.5 h-3.5" />
+          <span>Quick Scan</span>
+        </button>
       </div>
     </nav>
   );
@@ -173,7 +133,6 @@ function Navbar({ onMenuClick }) {
 function Sidebar({ isOpen, onClose, onQuickScanClick }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { stats, isLoading } = useScanStats();
 
   const navItems = [
@@ -182,8 +141,6 @@ function Sidebar({ isOpen, onClose, onQuickScanClick }) {
     { to: '/app/recycle',       label: 'Recycle Finder', Icon: Recycle      },
     { to: '/app/dashboard',     label: 'Dashboard',      Icon: LayoutGrid   },
     { to: '/app/history',       label: 'Scan History',   Icon: History      },
-    { to: '/app/leaderboard',   label: 'Leaderboard',    Icon: Trophy       },
-    { to: '/app/settings',      label: 'Settings',       Icon: Settings     },
   ];
 
   const isActive = (to) => {
@@ -250,19 +207,8 @@ function Sidebar({ isOpen, onClose, onQuickScanClick }) {
           ))}
         </nav>
 
-        {/* User profile footer */}
-        <div className="px-5 border-t border-mist/50 pt-4 mt-auto">
-          <div className="flex items-center gap-2">
-            <Avatar src={user?.avatar} name={user?.name} size={32} className="border border-mist" />
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-ink truncate font-display">{user?.name}</p>
-              <p className="text-[9px] text-gray-400 truncate font-body">User Profile</p>
-            </div>
-          </div>
-        </div>
-
-         {/* Quick Scan */}
-        <div className="px-3 mt-4">
+        {/* Quick Scan */}
+        <div className="px-3 mt-auto">
           <button
             onClick={() => {
               onClose?.();
@@ -303,7 +249,6 @@ function AppLayout({ children }) {
 }
 
 function AppLayoutContent({ children }) {
-  const { user } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isQuickScanOpen, setIsQuickScanOpen] = useState(false);
   const location = useLocation();
@@ -315,7 +260,10 @@ function AppLayoutContent({ children }) {
 
   return (
     <div className="font-body antialiased text-ink">
-      <Navbar onMenuClick={() => setDrawerOpen(true)} />
+      <Navbar
+        onMenuClick={() => setDrawerOpen(true)}
+        onQuickScanClick={() => setIsQuickScanOpen(true)}
+      />
       <Sidebar 
         isOpen={drawerOpen} 
         onClose={() => setDrawerOpen(false)} 
@@ -330,8 +278,8 @@ function AppLayoutContent({ children }) {
           { to: '/app/home',          Icon: BarChart2,   label: 'Home'     },
           { to: '/app/upload-center', Icon: CloudUpload, label: 'Upload'   },
           { to: '/app/recycle',       Icon: Recycle,     label: 'Recycle'  },
+          { to: '/app/dashboard',     Icon: LayoutGrid,  label: 'Dashboard'},
           { to: '/app/history',       Icon: History,     label: 'History'  },
-          { to: '/app/leaderboard',   Icon: Trophy,      label: 'Leaders'  },
         ].map(({ to, Icon, label }) => (
           <Link key={to} to={to} className="flex flex-col items-center gap-1 text-[10px] text-gray-400 font-body">
             <Icon className="w-5 h-5" /> {label}
@@ -352,22 +300,26 @@ export default function App() {
       {/* Public landing page */}
       <Route path="/" element={<LandingPage />} />
 
-      {/* Guest/Public-only pages */}
-      <Route element={<PublicOnlyRoute />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-      </Route>
+      {/* Redirect removed login/signup routes directly to app */}
+      <Route path="/login" element={<Navigate to="/app/home" replace />} />
+      <Route path="/signup" element={<Navigate to="/app/home" replace />} />
 
-      {/* Authenticated/Protected pages */}
-      <Route element={<ProtectedRoute />}>
-        <Route path="/app/home" element={<AppLayout><Home /></AppLayout>} />
-        <Route path="/app/upload-center" element={<AppLayout><UploadCenter /></AppLayout>} />
-        <Route path="/app/recycle" element={<AppLayout><RecycleFinder /></AppLayout>} />
-        <Route path="/app/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
-        <Route path="/app/history" element={<AppLayout><ScanHistory /></AppLayout>} />
-        <Route path="/app/leaderboard" element={<AppLayout><Leaderboard /></AppLayout>} />
-        <Route path="/app/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
-      </Route>
+      {/* Main Application Pages - Completely Open Access */}
+      <Route path="/app/home" element={<AppLayout><Home /></AppLayout>} />
+      <Route path="/app/upload-center" element={<AppLayout><UploadCenter /></AppLayout>} />
+      <Route path="/app/recycle" element={<AppLayout><RecycleFinder /></AppLayout>} />
+      <Route path="/app/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+      <Route path="/app/history" element={<AppLayout><ScanHistory /></AppLayout>} />
+      <Route path="/app/settings" element={<AppLayout><SettingsPage /></AppLayout>} />
+
+      {/* Convenient Direct Aliases */}
+      <Route path="/upload" element={<Navigate to="/app/upload-center" replace />} />
+      <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/recycle" element={<Navigate to="/app/recycle" replace />} />
+      <Route path="/history" element={<Navigate to="/app/history" replace />} />
+      <Route path="/leaderboard" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/app/leaderboard" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
 
       {/* Wildcard Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

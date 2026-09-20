@@ -34,19 +34,13 @@ export default function PublicNavbar() {
           </a>
         </div>
 
-        {/* Right: Auth Buttons (Desktop) */}
+        {/* Right: Launch App Button (Desktop) */}
         <div className="hidden md:flex items-center gap-4">
           <Link
-            to="/login"
-            className="text-sm font-semibold text-ink hover:text-forest transition-colors font-body"
+            to="/app/home"
+            className="bg-forest hover:bg-forest-dark text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all font-body focus:outline-none focus:ring-2 focus:ring-forest/20 shadow-sm"
           >
-            Log In
-          </Link>
-          <Link
-            to="/signup"
-            className="bg-forest hover:bg-forest-dark text-white font-bold text-xs px-4 py-2 rounded-xl transition-all font-body focus:outline-none focus:ring-2 focus:ring-forest/20"
-          >
-            Sign Up
+            Launch App →
           </Link>
         </div>
 
@@ -80,18 +74,11 @@ export default function PublicNavbar() {
           </a>
           <div className="border-t border-mist/50 my-1" />
           <Link
-            to="/login"
+            to="/app/home"
             onClick={() => setMobileMenuOpen(false)}
-            className="text-sm font-semibold text-ink hover:text-forest transition-colors font-body py-1.5"
+            className="bg-forest hover:bg-forest-dark text-white font-bold text-center text-sm py-2.5 rounded-xl transition-all font-body focus:outline-none focus:ring-2 focus:ring-forest/20 shadow-sm"
           >
-            Log In
-          </Link>
-          <Link
-            to="/signup"
-            onClick={() => setMobileMenuOpen(false)}
-            className="bg-forest hover:bg-forest-dark text-white font-bold text-center text-sm py-2.5 rounded-xl transition-all font-body focus:outline-none focus:ring-2 focus:ring-forest/20"
-          >
-            Sign Up
+            Launch App →
           </Link>
         </div>
       )}

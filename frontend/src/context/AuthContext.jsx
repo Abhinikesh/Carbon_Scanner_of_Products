@@ -3,122 +3,43 @@ import api, { setAuthToken } from '../lib/api';
 
 const AuthContext = createContext(null);
 
+const DEFAULT_USER = {
+  id: 'guest',
+  _id: 'guest',
+  name: 'Eco Explorer',
+  email: 'guest@climatelens.io',
+  avatar: '',
+  badges: [],
+  currentStreakDays: 1,
+  preferences: {
+    pushNotifications: true
+  }
+};
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(DEFAULT_USER);
+  const [accessToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Derived state
-  const isAuthenticated = !!user;
+  // In open mode, the user is always considered ready/authenticated
+  const isAuthenticated = true;
 
-  useEffect(() => {
-    const restoreSession = async () => {
-      try {
-        const refreshRes = await api.post('/auth/refresh');
-        const { accessToken: token } = refreshRes.data;
-
-        setAuthToken(token);
-        setAccessToken(token);
-
-        const userRes = await api.get('/auth/me');
-        setUser(userRes.data.user);
-      } catch (err) {
-        // Silent fail is normal when the user is not logged in / has no valid cookie
-        setAuthToken(null);
-        setAccessToken(null);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    restoreSession();
-  }, []);
+  const login = async () => ({ success: true });
+  const loginWithGoogle = async () => ({ success: true });
+  const register = async () => ({ success: true });
+  const logout = async () => {};
 
   /**
-   * Log in user with email + password
-   * @param {string} email
-   * @param {string} password
-   */
-  const login = async (email, password) => {
-    try {
-      const res = await api.post('/auth/login', { email, password });
-      const { accessToken: token, user: userData } = res.data;
-
-      setAuthToken(token);
-      setAccessToken(token);
-      setUser(userData);
-      return { success: true };
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      throw new Error(errorMsg);
-    }
-  };
-
-  /**
-   * Sign in (or sign up) with a Google ID token credential
-   * @param {string} credential  — the raw ID token from GoogleLogin's onSuccess callback
-   */
-  const loginWithGoogle = async (credential) => {
-    try {
-      const res = await api.post('/auth/google', { credential });
-      const { accessToken: token, user: userData } = res.data;
-
-      setAuthToken(token);
-      setAccessToken(token);
-      setUser(userData);
-      return { success: true };
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Google sign-in failed. Please try again.';
-      throw new Error(errorMsg);
-    }
-  };
-
-  /**
-   * Register new user with email + password
-   * @param {string} name
-   * @param {string} email
-   * @param {string} password
-   */
-  const register = async (name, email, password) => {
-    try {
-      const res = await api.post('/auth/register', { name, email, password });
-      const { accessToken: token, user: userData } = res.data;
-
-      setAuthToken(token);
-      setAccessToken(token);
-      setUser(userData);
-      return { success: true };
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Registration failed.';
-      throw new Error(errorMsg);
-    }
-  };
-
-  /**
-   * Log out user
-   */
-  const logout = async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch (err) {
-      // Ignore errors on logout request; clear state regardless
-    } finally {
-      setAuthToken(null);
-      setAccessToken(null);
-      setUser(null);
-    }
-  };
-
-  /**
-   * Refresh current user data from the database
+   * Optionally refresh current user stats/badges from /auth/me if available
    */
   const refreshUser = async () => {
     try {
       const res = await api.get('/auth/me');
-      setUser(res.data.user);
+      if (res.data?.user) {
+        setUser(res.data.user);
+      }
     } catch (err) {
-      console.error('[AuthContext] Failed to refresh user data:', err);
+      // Keep default user silently on failure
     }
   };
 

@@ -52,10 +52,10 @@ export default function Hero() {
             </p>
             <div className="flex gap-4 flex-wrap w-full sm:w-auto">
               <Link
-                to="/signup"
-                className="flex items-center justify-center gap-2 bg-forest hover:bg-forest-dark text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-forest/20 w-full sm:w-auto"
+                to="/app/upload-center"
+                className="flex items-center justify-center gap-2 bg-forest hover:bg-forest-dark text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-forest/20 w-full sm:w-auto shadow-sm"
               >
-                Start Tracking Free
+                Start Tracking Free →
               </Link>
               <a
                 href="#how-it-works"

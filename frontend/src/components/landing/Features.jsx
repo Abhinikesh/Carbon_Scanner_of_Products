@@ -25,8 +25,8 @@ export default function Features() {
     },
     {
       Icon: Lock,
-      title: 'Secure by Design',
-      description: 'Hashed passwords and rotating refresh tokens. Your data is never sold or shared.',
+      title: 'Instant & Private',
+      description: 'No account, password, or sign-up needed. Calculate emissions and find recycling centers privately.',
     },
     {
       Icon: Leaf,
